@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atlantic Coast Tours</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Welcome to Atlantic Coast Tours</h1>
+    <p>Explore the beautiful West of Ireland.</p>
+
+    <!-- Chatbot Toggle Icon placed on bottom right -->
+    <button id="chatbot-toggle">💬 Chat</button>
+
+    <!-- Chatbot Window -->
+    <div id="chatbot-window" class="hidden">
+        <div id="chat-header">
+            <h3>Atlantic Coast Support</h3>
+            <button id="close-chat">X</button>
+        </div>
+        
+        <!-- API Key Input: Keeps your key secure and out of GitHub -->
+        <div id="api-key-section">
+            <input type="password" id="api-key-input" placeholder="Paste Gemini API Key here...">
+            <button id="save-key">Save Key</button>
+        </div>
+        
+        <div id="chat-messages"></div>
+        
+        <div id="chat-input-area">
+            <input type="text" id="user-input" placeholder="Ask about our tours or weather...">
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
