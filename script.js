@@ -36,7 +36,7 @@ saveKeyBtn.addEventListener('click', () => {
 sendBtn.addEventListener('click', handleSend);
 
 async function handleSend() {
-    const text = userInput.value;
+    const text = userInput.value.trim();
     if (!text) return;
     if (!geminiApiKey) {
         alert("Please enter and save your Gemini API key first.");
@@ -62,7 +62,8 @@ function appendMessage(sender, text) {
     msgDiv.style.marginBottom = "10px";
     msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
     
-    if (sender === "Bot" && chatMessages.lastChild.innerHTML.includes("Thinking...")) {
+    // Remove "Thinking..." message once the bot replies
+    if (sender === "Bot" && chatMessages.lastChild && chatMessages.lastChild.innerHTML.includes("Thinking...")) {
         chatMessages.removeChild(chatMessages.lastChild);
     }
     
@@ -75,6 +76,7 @@ async function fetchGoogleSheet() {
     const sheetUrl = "https://docs.google.com/spreadsheets/d/1balBGf8QhZ5dc-RCCAPt2kcrcf6m_YRh0HL_r8bBtJw/export?format=csv&gid=120683740";
     try {
         const response = await fetch(sheetUrl);
+        if (!response.ok) throw new Error("Failed to load sheet data.");
         const data = await response.text();
         return data; 
     } catch (error) {
@@ -90,6 +92,7 @@ async function fetchWeather() {
     
     try {
         const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error("Failed to load weather data.");
         const data = await response.json();
         return `Current temp: ${data.current.temperature_2m}°C, Weather code: ${data.current.weather_code}`;
     } catch (error) {
@@ -98,41 +101,13 @@ async function fetchWeather() {
 }
 
 // ----------------------------------------------------------------
-// NEW PROFESSIONAL APPROACH: Dynamically fetch the live model first
+// UPDATED PIPELINE: Direct connection to bypass directory desync
 // ----------------------------------------------------------------
-async function getLiveModel() {
-    const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${geminiApiKey}`;
-    try {
-        const response = await fetch(listUrl);
-        if (!response.ok) throw new Error("Failed to authenticate or fetch models list.");
-        
-        const data = await response.json();
-        
-        // Find the first available model that supports text generation
-        const validModel = data.models.find(model => 
-            model.supportedGenerationMethods && 
-            model.supportedGenerationMethods.includes("generateContent")
-        );
-        
-        return validModel ? validModel.name : null; 
-    } catch (error) {
-        console.error("API Model List Error:", error);
-        return null;
-    }
-}
 
-// Call Gemini API dynamically
+// Call Gemini API directly
 async function callGemini(userQuery, sheetData, weatherData) {
-    // 1. Get the actual live model name from Google's servers
-    const modelName = await getLiveModel();
-    
-    if (!modelName) {
-        appendMessage("Bot", "Error: Could not retrieve an active model from Google AI Studio.");
-        return;
-    }
-
-    // 2. Build the URL dynamically based on the exact live model string
-    const url = `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${geminiApiKey}`;
+    // Hardcoded to the model endpoint established in our troubleshooting
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${geminiApiKey}`;
     
     const prompt = `
     You are a helpful customer support agent for Atlantic Coast Tours in the West of Ireland.
