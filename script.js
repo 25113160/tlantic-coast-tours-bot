@@ -100,7 +100,7 @@ async function fetchWeather() {
 
 // Call Gemini API
 async function callGemini(userQuery, sheetData, weatherData) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiApiKey}`;
     
     const prompt = `
     You are a helpful customer support agent for Atlantic Coast Tours in the West of Ireland.
