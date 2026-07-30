@@ -110,32 +110,31 @@
                 const response = await fetch(apiUrl);
                 if (!response.ok) throw new Error("Failed to load weather data.");
                 const data = await response.json();
-                return \`Current temp: \${data.current.temperature_2m}°C, Weather code: \${data.current.weather_code}\`;
+                return `Current temp: ${data.current.temperature_2m}°C, Weather code: ${data.current.weather_code}`;
             } catch (error) {
                 return "Error fetching weather.";
             }
         }
 
         async function callGemini(userQuery, sheetData, weatherData) {
-            // Hardcoded to the current 2026 stable architecture
-            const url = \`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=\${geminiApiKey}\`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${geminiApiKey}`;
             
-            const prompt = \`
+            const prompt = `
             You are a helpful customer support agent for Atlantic Coast Tours in the West of Ireland.
             
             Here is the live data catalogue of our tours: 
-            \${sheetData}
+            ${sheetData}
             
             Here is the current live weather forecast for the area: 
-            \${weatherData}
+            ${weatherData}
             
             Instructions:
             1. Answer the customer's query using ONLY the live data provided above.
             2. If a tour has an absurd or implausible price, or zero availability, use your judgement on how to present this to the customer honestly. 
             3. If the user asks something completely off-topic, politely respond using your general knowledge but try to steer them back to tours.
 
-            User Query: \${userQuery}
-            \`;
+            User Query: ${userQuery}
+            `;
 
             const requestBody = { contents: [{ parts: [{ text: prompt }] }] };
 
@@ -149,14 +148,14 @@
                 const data = await response.json();
                 
                 if (data.error) {
-                    appendMessage("Bot", \`API Error: \${data.error.message}\`);
+                    appendMessage("Bot", `API Error: ${data.error.message}`);
                     return;
                 }
                 
                 const botReply = data.candidates[0].content.parts[0].text;
                 appendMessage("Bot", botReply);
             } catch (error) {
-                appendMessage("Bot", \`Connection Error: \${error.message}\`);
+                appendMessage("Bot", `Connection Error: ${error.message}`);
             }
         }
     </script>
