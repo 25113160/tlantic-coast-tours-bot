@@ -21,7 +21,7 @@ closeChat.addEventListener('click', () => chatWindow.classList.add('hidden'));
 
 // Save API Key in browser memory only
 saveKeyBtn.addEventListener('click', () => {
-    geminiApiKey = apiKeyInput.value;
+    geminiApiKey = apiKeyInput.value.trim();
     sessionStorage.setItem("geminiKey", geminiApiKey);
     
     apiKeyInput.value = "";
@@ -71,7 +71,6 @@ function appendMessage(sender, text) {
 }
 
 // Fetch Google Sheet 
-// Uses the export format to easily pull live data without authentication limits
 async function fetchGoogleSheet() {
     const sheetUrl = "https://docs.google.com/spreadsheets/d/1balBGf8QhZ5dc-RCCAPt2kcrcf6m_YRh0HL_r8bBtJw/export?format=csv&gid=120683740";
     try {
@@ -98,9 +97,42 @@ async function fetchWeather() {
     }
 }
 
-// Call Gemini API
+// ----------------------------------------------------------------
+// NEW PROFESSIONAL APPROACH: Dynamically fetch the live model first
+// ----------------------------------------------------------------
+async function getLiveModel() {
+    const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${geminiApiKey}`;
+    try {
+        const response = await fetch(listUrl);
+        if (!response.ok) throw new Error("Failed to authenticate or fetch models list.");
+        
+        const data = await response.json();
+        
+        // Find the first available model that supports text generation
+        const validModel = data.models.find(model => 
+            model.supportedGenerationMethods && 
+            model.supportedGenerationMethods.includes("generateContent")
+        );
+        
+        return validModel ? validModel.name : null; 
+    } catch (error) {
+        console.error("API Model List Error:", error);
+        return null;
+    }
+}
+
+// Call Gemini API dynamically
 async function callGemini(userQuery, sheetData, weatherData) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiApiKey}`;
+    // 1. Get the actual live model name from Google's servers
+    const modelName = await getLiveModel();
+    
+    if (!modelName) {
+        appendMessage("Bot", "Error: Could not retrieve an active model from Google AI Studio.");
+        return;
+    }
+
+    // 2. Build the URL dynamically based on the exact live model string
+    const url = `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${geminiApiKey}`;
     
     const prompt = `
     You are a helpful customer support agent for Atlantic Coast Tours in the West of Ireland.
@@ -131,9 +163,15 @@ async function callGemini(userQuery, sheetData, weatherData) {
         });
         
         const data = await response.json();
+        
+        if (data.error) {
+            appendMessage("Bot", `API Error: ${data.error.message}`);
+            return;
+        }
+        
         const botReply = data.candidates[0].content.parts[0].text;
         appendMessage("Bot", botReply);
     } catch (error) {
-        appendMessage("Bot", "Sorry, I encountered an error. Please try again.");
+        appendMessage("Bot", `Connection Error: ${error.message}`);
     }
 }
